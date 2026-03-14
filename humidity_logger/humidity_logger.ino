@@ -149,11 +149,10 @@ void updateState(float humidity) {
         }
       } else {
         // Experiment: Humidify until we get to the upper bound
-        if
-          if (humidity >= RH_Upper_Bound - 1) {
-            currentState = HOLD;
-            experimentStarted = false;
-          }
+        if (humidity >= RH_Upper_Bound - 1) {
+          currentState = HOLD;
+          experimentStarted = false;
+        }
       }
       break;
 
@@ -197,7 +196,8 @@ void applyOutputs() {
 void setup() {
   //Starts Serial Log
   Serial.begin(9600);
-  while (!Serial);
+  while (!Serial)
+    ;
 
   pinMode(WetSolenoidPin, OUTPUT);
   pinMode(DrySolenoidPin, OUTPUT);
@@ -212,6 +212,7 @@ void setup() {
   if (!status) {
     while (1) {
       // Stop forever if sensor is not found
+      Serial.println("ERROR: BME280 not found!");
     }
   }
 }

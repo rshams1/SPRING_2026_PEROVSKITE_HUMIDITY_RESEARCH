@@ -59,7 +59,7 @@ def RH_List(comport, baudrate,runtime):
     return RH_values, T_values
 
 
-# Calculates the change in RH in a given time
+# Returns the average rate of humidity change in RH% per second
 def RH_change(RH_v,seconds):
     if RH_v == []:
         return None
