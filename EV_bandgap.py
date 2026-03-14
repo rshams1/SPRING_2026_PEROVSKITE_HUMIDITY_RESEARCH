@@ -1,0 +1,35 @@
+import pandas as pd
+
+
+# Input peak wavelength in nanometers to calculate bandgap using Planck Energy Relation
+def calcEV(peak):
+    if peak < 300:
+        return 0
+    return 1240 / peak
+
+
+# MAPI, MAPI w/ DAO, MAPI w/ PEG
+# 30-40% RH, 30-50% RH, 30-60% RH,
+
+# MAPI
+# 30-40% RH: SAMPLE 1 SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-50% RH: SAMPLE 1 SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-60% RH: SAMPLE 1 SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+
+# MAPI w/ DAO
+# 30-40% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-50% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-60% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+
+# MAPI w/ PEG
+# 30-40% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-50% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+# 30-60% RH: SAMPLE ! SAMPLE 2 SAMPLE 3 SAMPLE 4 SAMPLE 5
+
+
+
+
+
+
+
+
