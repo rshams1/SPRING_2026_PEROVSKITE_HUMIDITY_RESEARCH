@@ -197,8 +197,7 @@ void applyOutputs() {
 void setup() {
   //Starts Serial Log
   Serial.begin(9600);
-  while (!Serial)
-    ;
+  while (!Serial);
 
   pinMode(WetSolenoidPin, OUTPUT);
   pinMode(DrySolenoidPin, OUTPUT);
