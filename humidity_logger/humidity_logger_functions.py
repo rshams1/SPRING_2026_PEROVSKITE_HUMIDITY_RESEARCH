@@ -35,6 +35,8 @@ def RH_List(comport, baudrate,runtime):
 
     time.sleep(2) 
     print("Serial is connected to Arduino!")
+    arduino.write(b"START\n")
+
 
     
     while elapsedtime < runtime:
