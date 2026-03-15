@@ -6,7 +6,7 @@ logs humidity vs time, plots the humidity profile, and saves experiment data
 to a timestamped CSV file for later analysis.
 
 Used for my Spring 2026 Research project on studying the effects of Rapid Humidity Shifts
-on MAPI(Methylammonium Phosphate Iodide) perovskite solar cells
+on MAPI(Methylammonium Lead Iodide) perovskite solar cells
 """
 
 import serial
