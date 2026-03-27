@@ -1,3 +1,5 @@
+#include <Adafruit_BME280.h>
+
 /*
 Reads relative humidity from a BME280 sensor and sends the value over
 the Arduino serial interface for data collection in Python.
@@ -206,7 +208,7 @@ void setup() {
   digitalWrite(DrySolenoidPin, LOW);
 
   //Starts the bme object from the 0x77 I2C address
-  unsigned status = bme.begin(0x77);
+  unsigned status = bme.begin(0x76);
 
   //Checks if BME280 is connected
   if (!status) {
@@ -218,12 +220,11 @@ void setup() {
 }
 
 void loop() {
-  checkSerialCommand();
 
   float humidity = bme.readHumidity();
 
-  updateState(humidity);
-  applyOutputs();
+  //updateState(humidity);
+  //applyOutputs();
 
   Serial.println(humidity);
 

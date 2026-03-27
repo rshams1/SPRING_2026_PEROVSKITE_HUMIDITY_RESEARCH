@@ -13,49 +13,85 @@ import serial
 import time
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
+import os
+import math
 from datetime import datetime
 
 
 # Returns the Humidity valuves from the BME 280 and the time when those values were taken
 # comport is the dedicated port for the arduino
 # baudrate is the Serial frequency, which from the C++ code we have chosen 9600
-def RH_List(comport, baudrate,runtime):
+# Allows for Live Monitoring of RH Values if given a target_low and target_high 
+# Added Functionality for sample period, samples at given value in seconds
+def RH_List(comport, baudrate, runtime, target_low=None, target_high=None,sample_period=0.5):
     RH_values = []
     T_values = []
-    starttime = time.time()
-    elapsedtime = 0
+    
 
     # Creates a arduino object that is connected with the serial output 
     # Samples at the defined frqeuency from the selected comport
     # Waits until requested bytes are read, or 1 second
+    arduino = serial.Serial(comport, baudrate, timeout=1)
 
-    arduino = serial.Serial(comport,baudrate, timeout=1) 
-
-    # Gives 2 seconds to establish connection
-
-    time.sleep(2) 
+    time.sleep(2)
     print("Serial is connected to Arduino!")
-    arduino.write(b"START\n")
+
+    target_reached = False
+    latest_RH = None
+
+    starttime = time.time()
+    next_sample_time = 0.0
 
 
-    
-    while elapsedtime < runtime:
+    while True:
+        elapsedtime = time.time() - starttime
+        if elapsedtime >= runtime:
+            break
+
         # Reads raw data from serial port, and decodes into a strong
-        raw_data = arduino.readline().decode('utf-8')
-        raw_data = raw_data.strip()
+        raw_data = arduino.readline().decode('utf-8', errors='ignore').strip()
 
 
-        current_time = time.time()
-        elapsedtime = current_time - starttime
-
-        # Appends RH and time values at the same time to sync entries
         if raw_data != "":
-            RH = float(raw_data)
-            RH_values.append(RH)
-            T_values.append(elapsedtime)
+            try:
+                RH = float(raw_data)
+                latest_RH = RH
+            except ValueError:
+                print(f"Skipped non-numeric line: {raw_data}")
+                continue
+
+            
+            
+            
+            # Makes a optional choice of live monitoring
+            # Provides a alert if RH exceeds or is lower than target_low or target_high
+            if latest_RH is not None and elapsedtime >= next_sample_time:
+                RH_values.append(latest_RH)
+                T_values.append(round(next_sample_time, 2))
+
+                if target_low is not None and target_high is not None:
+                    if latest_RH < target_low:
+                        status = "TOO LOW"
+                        target_reached = False
+                    elif latest_RH > target_high:
+                        status = "TOO HIGH"
+                        target_reached = False
+                    else:
+                        status = "IN TARGET"
+                        if not target_reached:
+                            print("\n*** TARGET RH REACHED ***\n")
+                            target_reached = True
+
+                    print(f"Time: {next_sample_time:.2f}s | RH: {latest_RH:.2f}% | {status}")
+                else:
+                    print(f"Time: {next_sample_time:.2f}s | RH: {latest_RH:.2f}%")
+
+                next_sample_time += sample_period
+
 
     arduino.close()
-    
+
     return RH_values, T_values
 
 
@@ -68,18 +104,61 @@ def RH_change(RH_v,seconds):
 
 # Plots Humidity vs Time Graph
 def plotRH(T_values,RH_values):
-    plt.plot(T_values,RH_values, marker = 'o', color = 'blue')
+    RH_smooth = exponential_smoothing(RH_values, alpha=0.1)
+    RH_filtered = deadband_filter(RH_smooth, threshold=0.25)
+
+    plt.plot(T_values,RH_filtered, marker = 'o', color = 'blue')
     plt.xlabel("Time(s)")
     plt.ylabel("RH Value(%)")
     plt.title("Chamber Humidity vs Time Graph")
     plt.grid(True)
     plt.show()
 
+# Smooths Noisy humidity reading
+def exponential_smoothing(data, alpha=0.2):
+    smoothed = [data[0]]
+    for i in range(1, len(data)):
+        smoothed.append(alpha * data[i] + (1 - alpha) * smoothed[i-1])
+    return smoothed
+
+# Implements a deadband to filter out changes of less than the threshold
+def deadband_filter(data, threshold=0.05):
+    filtered = [data[0]]
+
+    for i in range(1, len(data)):
+        if abs(data[i] - filtered[-1]) < threshold:
+            filtered.append(filtered[-1])  # hold value
+        else:
+            filtered.append(data[i])
+
+    return filtered
 
 # Exports Humidity vs Time values into a CSV using Pandas
-def saveValues(T_values,RH_values):
+def saveValues(T_values, RH_values):
     values = {"Time (s)": T_values, "RH (%)": RH_values}
     df = pd.DataFrame(values)
-    filename = "RH_Run" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".csv"
-    df.to_csv(filename, index = False)
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    folder = os.path.join(script_dir, "Data")
+
+   
+
+    os.makedirs(folder, exist_ok=True)
+
+
+    filename = "RH_Run_" + datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".csv"
+    filepath = os.path.join(folder, filename)
+
+    df.to_csv(filepath, index=False)
+
+
+
+def main():
+    RH_Values, T_values = RH_List("/dev/cu.usbmodem101", 9600,10,40,57.5)
+    plotRH(T_values,RH_Values)
+    saveValues(T_values,RH_Values)
+
+if __name__ == '__main__':
+    main()
+
 
